@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from typing import Optional, List #List mejora la documentacion de la API
+from typing import Optional, List  # List mejora la documentacion de la API
 
 app = FastAPI()
 
@@ -9,13 +9,22 @@ app.title = "Prueba FastApiBoost"
 
 # modelos
 
+
 class Movie(BaseModel):
-    id: Optional[int] 
+    id: Optional[int]
     title: str
     category: str
     year: int
 
+
 class MovieUpdate(BaseModel):
+    title: str
+    category: str
+    year: int
+
+
+class Game(BaseModel):
+    id: Optional[int]
     title: str
     category: str
     year: int
@@ -47,6 +56,27 @@ movies = [
     },
 ]
 
+games = [
+    {
+        "id": 1,
+        "title": "Mario",
+        "category": "rpg",
+        "year": 1999,
+    },
+    {
+        "id": 2,
+        "title": "Donkey kong",
+        "category": "plataformas",
+        "year": 2000,
+    },
+    {
+        "id": 3,
+        "title": "Halo",
+        "category": "Shooter",
+        "year": 2010,
+    },
+]
+
 
 # prueba endpoint
 
@@ -54,6 +84,11 @@ movies = [
 @app.get("/movies", tags=["Movies"])
 def get_movies() -> List[Movie]:
     return movies
+
+#prueba get con otra clase
+@app.get("/games", tags=["Games"])
+def get_games() -> List[Game]:
+    return games
 
 
 @app.get("/movies/{id}", tags=["Movies"])
@@ -78,7 +113,7 @@ def get_movie_by_category(category: str, year: int):
 
 @app.post("/movies", tags=["Movies"])
 def create_movie(movie: Movie) -> List[Movie]:
-    movies.append(movie.model_dump()) # convertir a diccionario
+    movies.append(movie.model_dump())  # convertir a diccionario
     return movies  # solo para observar las nuevas
 
 
@@ -97,9 +132,11 @@ def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
 
 # metodo DELETE
 
+
 @app.delete("/movies/{id}", tags=["Movies"])
 def delete_movie(id: int) -> List[Movie]:
     for movie in movies:
         if movie["id"] == id:
             movies.remove(movie)
     return movies
+
