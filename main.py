@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List  # List mejora la documentacion de la API
+import datetime
+
 
 app = FastAPI()
 
@@ -22,6 +24,34 @@ class MovieUpdate(BaseModel):
     category: str
     year: int
 
+class MovieCreate(BaseModel):
+    id: int
+    title: str = Field(min_length=5, max_length=15, default="My movie") #validaciones de datos
+    category: str = Field(default="My category")
+    year: int = Field(le=datetime.date.today().year, ge= 1900, default=0)
+
+class GameCreate(BaseModel):
+    id: int
+    title: str
+    category: str
+    year: int
+
+    model_config = {
+        "json_schema_extra":{
+            "example":{
+                "id": 1,
+                "title": "my game",
+                "category": "my category",
+                "year": 2025,
+            }
+        }
+    }
+    # validaciones mediante model_config
+
+#gt greater than
+#ge greater than or equal
+#lt less than
+#le less than or equal
 
 class Game(BaseModel):
     id: Optional[int]
@@ -35,26 +65,7 @@ def home():
     return "Prueba FastAPI"
 
 
-movies = [
-    {
-        "id": 1,
-        "title": "Doctor Strange en el Multiverso de la Locura",
-        "category": "Superhéroes",
-        "year": 2023,
-    },
-    {
-        "id": 2,
-        "title": "Gato con Botas 2: El Último Deseo",
-        "category": "Animada",
-        "year": 2024,
-    },
-    {
-        "id": 3,
-        "title": "Lilo y Stitch",
-        "category": "Live Action",
-        "year": 2025,
-    },
-]
+movies : List[Movie] = []
 
 games = [
     {
@@ -95,8 +106,7 @@ def get_games() -> List[Game]:
 def get_movie(id: int):
     for movie in movies:
         if movie["id"] == id:
-            return movie
-
+            return movie.model_dump
 
 # parametros query
 
@@ -105,17 +115,22 @@ def get_movie(id: int):
 def get_movie_by_category(category: str, year: int):
     for movie in movies:
         if movie["category"] == category:
-            return movie
-
+            return movie.model_dump
+    return []
 
 # metodo POST
 
 
 @app.post("/movies", tags=["Movies"])
-def create_movie(movie: Movie) -> List[Movie]:
-    movies.append(movie.model_dump())  # convertir a diccionario
-    return movies  # solo para observar las nuevas
+def create_movie(movie: MovieCreate) -> List[Movie]:
+    movies.append(movie)  # convertir a diccionario
+    return [movie.model_dump() for movie in movies]  # solo para observar las nuevas
 
+
+@app.post("/games", tags=["Games"])
+def create_game(game: GameCreate) -> List[Game]:
+    games.append(game.model_dump())
+    return games
 
 # metodo PUT
 
@@ -127,7 +142,7 @@ def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
             item["title"] = movie.title
             item["category"] = movie.category
             item["year"] = movie.year
-    return movies
+    return [movie.model_dump() for movie in movies]
 
 
 # metodo DELETE
@@ -136,7 +151,6 @@ def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
 @app.delete("/movies/{id}", tags=["Movies"])
 def delete_movie(id: int) -> List[Movie]:
     for movie in movies:
-        if movie["id"] == id:
+        if movie.id == id:
             movies.remove(movie)
-    return movies
-
+    return [movie.model_dump() for movie in movies]
