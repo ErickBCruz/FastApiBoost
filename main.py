@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List  # List mejora la documentacion de la API
@@ -28,7 +28,7 @@ class MovieCreate(BaseModel):
     id: int
     title: str = Field(min_length=5, max_length=15, default="My movie") #validaciones de datos
     category: str = Field(default="My category")
-    year: int = Field(le=datetime.date.today().year, ge= 1900, default=0)
+    year: int = Field(le=datetime.date.today().year, ge= 1900, default=2000)
 
 class GameCreate(BaseModel):
     id: int
@@ -103,10 +103,11 @@ def get_games() -> List[Game]:
 
 
 @app.get("/movies/{id}", tags=["Movies"])
-def get_movie(id: int):
+def get_movie(id: int) -> Movie | dict:
     for movie in movies:
-        if movie["id"] == id:
-            return movie.model_dump
+        if movie.id == id:
+            return movie
+    return {}
 
 # parametros query
 
