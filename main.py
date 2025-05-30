@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body, Path
+from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List  # List mejora la documentacion de la API
@@ -103,7 +103,7 @@ def get_games() -> List[Game]:
 
 
 @app.get("/movies/{id}", tags=["Movies"])
-def get_movie(id: int) -> Movie | dict:
+def get_movie(id: int = Path(ge=0)) -> Movie | dict:
     for movie in movies:
         if movie.id == id:
             return movie
@@ -113,7 +113,7 @@ def get_movie(id: int) -> Movie | dict:
 
 
 @app.get("/movies/", tags=["Movies"])
-def get_movie_by_category(category: str) -> List[Movie]:
+def get_movie_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
     movies_category : List[Movie] = []
     for movie in movies:
         if movie.category == category:
