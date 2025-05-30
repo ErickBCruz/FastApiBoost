@@ -113,11 +113,12 @@ def get_movie(id: int) -> Movie | dict:
 
 
 @app.get("/movies/", tags=["Movies"])
-def get_movie_by_category(category: str, year: int):
+def get_movie_by_category(category: str) -> List[Movie]:
+    movies_category : List[Movie] = []
     for movie in movies:
-        if movie["category"] == category:
-            return movie.model_dump
-    return []
+        if movie.category == category:
+            movies_category.append(movie)
+    return movies_category
 
 # metodo POST
 
@@ -139,10 +140,10 @@ def create_game(game: GameCreate) -> List[Game]:
 @app.put("/movies/{id}", tags=["Movies"])
 def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
     for item in movies:
-        if item["id"] == id:
-            item["title"] = movie.title
-            item["category"] = movie.category
-            item["year"] = movie.year
+        if item.id == id:
+            item.title = movie.title
+            item.category = movie.category
+            item.year = movie.year
     return [movie.model_dump() for movie in movies]
 
 
