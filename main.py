@@ -60,9 +60,9 @@ class Game(BaseModel):
     year: int
 
 
-@app.get("/", tags=["Home"])
+@app.get("/", tags=["Home"], status_code=500, response_description="Esto debe devolver un error") # codigo de estado esperado, por defecto en 200, 500 es un error
 def home():
-    return PlainTextResponse(content="home")
+    return PlainTextResponse(content="home", status_code=200) # Codigo de estado
 
 
 movies : List[Movie] = []
@@ -92,7 +92,7 @@ games = [
 # prueba endpoint
 
 
-@app.get("/movies", tags=["Movies"])
+@app.get("/movies", tags=["Movies"], status_code=200, response_description="Este debe retornar una respuesta exitosa")
 def get_movies() -> List[Movie]:
     content = movies
     return JSONResponse(content=content)
@@ -128,7 +128,7 @@ def get_movie_by_category(category: str = Query(min_length=5, max_length=15)) ->
 def create_movie(movie: MovieCreate) -> List[Movie]:
     movies.append(movie)  # convertir a diccionario
     content = [movie.model_dump() for movie in movies]  # solo para observar las nuevas
-    return JSONResponse(content=content) 
+    return JSONResponse(content=content, status_code=200) 
     #return RedirectResponse("/movies", status_code=303) #prueba RedirectResponse
 
 
@@ -148,7 +148,7 @@ def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
             item.category = movie.category
             item.year = movie.year
     content = [movie.model_dump() for movie in movies]
-    return JSONResponse(content=content)
+    return JSONResponse(content=content, status_code=200)
 
 
 # metodo DELETE
@@ -160,7 +160,7 @@ def delete_movie(id: int) -> List[Movie]:
         if movie.id == id:
             movies.remove(movie)
     content = [movie.model_dump() for movie in movies]
-    return JSONResponse(content=content)
+    return JSONResponse(content=content, status_code=200)
 
 
 # FileResponse
@@ -168,3 +168,17 @@ def delete_movie(id: int) -> List[Movie]:
 @app.get("/get_file", tags=["Files"])
 def get_files():
     return FileResponse("Dummy PDF.pdf")
+
+
+# CODIGOS DE ESTADO
+
+# 200	OK	Todo salió bien (GET, PUT exitoso)
+# 201	Created	Recurso creado exitosamente (POST)
+# 204	No Content	Acción exitosa pero sin contenido que devolver
+# 400	Bad Request	Datos inválidos enviados por el cliente
+# 401	Unauthorized	No autenticado
+# 403	Forbidden	Autenticado pero no autorizado
+# 404	Not Found	Recurso no encontrado
+# 409	Conflict	Conflicto (por ejemplo, ya existe el recurso)
+# 422	Unprocessable Entity	Validación fallida (automáticamente por FastAPI)
+# 500	Internal Server Error	Error del servidor
