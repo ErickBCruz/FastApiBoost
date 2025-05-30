@@ -132,6 +132,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# PDF
+Dummy PDF.pdf
+
 # Spyder project settings
 .spyderproject
 .spyproject

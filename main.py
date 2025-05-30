@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Body, Path, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List  # List mejora la documentacion de la API
 import datetime
@@ -62,7 +62,7 @@ class Game(BaseModel):
 
 @app.get("/", tags=["Home"])
 def home():
-    return "Prueba FastAPI"
+    return PlainTextResponse(content="home")
 
 
 movies : List[Movie] = []
@@ -94,7 +94,8 @@ games = [
 
 @app.get("/movies", tags=["Movies"])
 def get_movies() -> List[Movie]:
-    return movies
+    content = movies
+    return JSONResponse(content=content)
 
 #prueba get con otra clase
 @app.get("/games", tags=["Games"])
@@ -126,7 +127,9 @@ def get_movie_by_category(category: str = Query(min_length=5, max_length=15)) ->
 @app.post("/movies", tags=["Movies"])
 def create_movie(movie: MovieCreate) -> List[Movie]:
     movies.append(movie)  # convertir a diccionario
-    return [movie.model_dump() for movie in movies]  # solo para observar las nuevas
+    content = [movie.model_dump() for movie in movies]  # solo para observar las nuevas
+    return JSONResponse(content=content) 
+    #return RedirectResponse("/movies", status_code=303) #prueba RedirectResponse
 
 
 @app.post("/games", tags=["Games"])
@@ -144,7 +147,8 @@ def update_movie(id: int, movie: MovieUpdate) -> List[Movie]:
             item.title = movie.title
             item.category = movie.category
             item.year = movie.year
-    return [movie.model_dump() for movie in movies]
+    content = [movie.model_dump() for movie in movies]
+    return JSONResponse(content=content)
 
 
 # metodo DELETE
@@ -155,4 +159,12 @@ def delete_movie(id: int) -> List[Movie]:
     for movie in movies:
         if movie.id == id:
             movies.remove(movie)
-    return [movie.model_dump() for movie in movies]
+    content = [movie.model_dump() for movie in movies]
+    return JSONResponse(content=content)
+
+
+# FileResponse
+
+@app.get("/get_file", tags=["Files"])
+def get_files():
+    return FileResponse("Dummy PDF.pdf")
