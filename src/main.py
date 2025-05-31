@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Body, Path, Query
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, FileResponse
+from fastapi import FastAPI, Body, Path, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, FileResponse, Response
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List  # List mejora la documentacion de la API
+from src.utils.http_error_handler import HTTPErrorHandler
 
 #routers
 from src.routers.movie_router import movie_router
@@ -9,6 +10,15 @@ from src.routers.game_router import game_router
 
 
 app = FastAPI()
+
+#middleware
+app.add_middleware(HTTPErrorHandler)
+
+#middleware de fastAPI
+# @app.middleware('http')
+# async def http_error_handler(request: Request, call_next) -> Response | JSONResponse:
+#     print ('middleware is running!')
+#     return await call_next(request)
 
 app.title = "Prueba FastApiBoost"
 
