@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Body, Path, Query, Request, Depends
+from fastapi import FastAPI, Body, Path, Query, Request, Depends, Form
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, FileResponse, Response
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Annotated  # List mejora la documentacion de la API
 from src.utils.http_error_handler import HTTPErrorHandler
+from fastapi.exceptions import HTTPException
 
 #routers
 from src.routers.movie_router import movie_router
@@ -13,6 +14,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 
+#Autenticación y autorización
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import jwt
+
+
 #dependencias globales
 # def dependency1 (param1: str):
 #     print("dependencia global1")
@@ -20,6 +26,8 @@ import os
 # app = FastAPI(dependencies=dependency1)
 
 app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 #middleware
 app.add_middleware(HTTPErrorHandler)
@@ -75,3 +83,44 @@ def get_users(commons: commonsDep):
 @app.get("/costumer", tags=["dependencies"])
 def get_costumers(commons: commonsDep):
     return f"costumer init betwen {commons['start_date']} and {commons['end_date']}"
+
+# Autorización y autenticación
+
+#modelo
+
+class User(BaseModel):
+    username: str
+    email: str | None = None
+    full_name: str | None = None
+    disabled: bool | None = None
+
+
+users = {
+    "pablo123": {"username":"pablo123","email":"pablo123@gmail.com","password":"fakepass"},
+    "juan": {"username":"juan123","juan123@gmail.com":"","password":"admin"},
+}
+
+#enconder y decoder
+
+def enconde_token(payload: dict) -> str:
+    token = jwt.encode(payload, "my-secret", algorithm="HS256")
+    return token
+
+def decode_token(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
+    data = jwt.decode(token, "my-secret", algorithm="HS256")
+    user = users.get(data["username"])
+    return user
+
+
+@app.post("/token")
+def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    user = users.get(form_data.username)
+    if not user or form_data.password != user["password"]:
+        raise HTTPException(status_code=400, detail="Usuario incorrecto")
+    token = enconde_token({"username": user["username"], "email": user["email"]})
+    return {"access_token": token}
+
+
+@app.get("/users/profile")
+def profile(my_user: Annotated[dict, Depends(decode_token)]):
+    return my_user
